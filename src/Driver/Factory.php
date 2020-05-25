@@ -15,11 +15,22 @@ use Foris\Easy\Logger\Exception\InvalidConfigException;
 class Factory
 {
     /**
+     * Logger config
+     *
+     * @var array
+     */
+    protected $config = [];
+
+    /**
+     * Logger driver aliases
+     *
      * @var array
      */
     protected $aliases = [];
 
     /**
+     * Logger driver creators,
+     *
      * @var array
      */
     protected $creators = [];
@@ -27,11 +38,24 @@ class Factory
     /**
      * Factory constructor.
      *
+     * @param array $config
      * @throws InvalidConfigException
      */
-    public function __construct()
+    public function __construct($config = [])
     {
-        $this->registerDefaultCreator();
+        $this->setConfig($config)->registerDefaultCreator();
+    }
+
+    /**
+     * Set logger driver config.
+     *
+     * @param $config
+     * @return $this
+     */
+    public function setConfig($config)
+    {
+        $this->config = $config;
+        return $this;
     }
 
     /**
@@ -200,7 +224,7 @@ class Factory
             foreach ($config['channels'] ?? [] as $channel) {
                 $handlers = array_merge(
                     $handlers,
-                    $this->make($channel, $config['total_channels'][$channel] ?? [])->getHandlers()
+                    $this->make($channel, $config['channels'][$channel] ?? [])->getHandlers()
                 );
             }
 

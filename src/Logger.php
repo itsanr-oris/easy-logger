@@ -33,20 +33,19 @@ class Logger implements LoggerInterface
      */
     public function __construct(DriverFactory $factory, array $config = [])
     {
-        $this->config = $config;
-        $this->initStackConfig()->setDriverFactory($factory);
+        $this->setDriverFactory($factory)->initConfig($config);
     }
 
     /**
-     * Init stack logger driver config
+     * Init logger driver config
      *
+     * @param $config
      * @return $this
      */
-    protected function initStackConfig()
+    protected function initConfig($config)
     {
-        if (isset($this->config['channel']['stack'])) {
-            $this->config['channel']['stack']['total_channels'] = $this->config['channel'];
-        }
+        $this->config = $config;
+        $this->getDriverFactory()->setConfig($config);
         return $this;
     }
 
@@ -94,8 +93,8 @@ class Logger implements LoggerInterface
     public function stack(array $channels)
     {
         $this->config['default'] = 'stack';
-        $this->config['channel']['stack']['channels'] = $channels;
-        $this->initStackConfig();
+        $this->config['channels']['stack']['channels'] = $channels;
+        $this->initConfig($this->config);
         $this->driver = null;
         return $this;
     }
