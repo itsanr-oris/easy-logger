@@ -49,6 +49,7 @@ class LoggerTest extends TestCase
 
         $factory = Mockery::mock(Factory::class);
         $factory->shouldReceive('make')->andReturn($monoLogger);
+        $factory->shouldReceive('setConfig')->with($config)->andReturnSelf();
         $logger = new Logger($factory, $config);
 
         $logger->emergency('emergency message');
@@ -85,6 +86,7 @@ class LoggerTest extends TestCase
         $factory = Mockery::mock(Factory::class);
         $factory->shouldReceive('make')->with('single', ['driver' => 'single'])->andReturn($singleDriverLogger);
         $factory->shouldReceive('make')->with('daily', ['driver' => 'daily'])->andReturn($dailyDriverLogger);
+        $factory->shouldReceive('setConfig')->with($config)->andReturnSelf();
 
         $logger = new Logger($factory, $config);
 
@@ -117,6 +119,7 @@ class LoggerTest extends TestCase
 
         $factory = Mockery::mock(Factory::class);
         $factory->shouldReceive('make')->with('stack', $receiveConfig);
+        $factory->shouldReceive('setConfig')->with($config)->andReturnSelf();
 
         $logger = new Logger($factory, $config);
         $logger->stack(['single', 'daily']);

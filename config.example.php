@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: f-oris
- * Date: 2019/7/9
- * Time: 4:25 PM
- */
 
 return [
     /**
