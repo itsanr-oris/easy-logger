@@ -224,7 +224,7 @@ class Factory
             foreach ($config['channels'] ?? [] as $channel) {
                 $handlers = array_merge(
                     $handlers,
-                    $this->make($channel, $config['channels'][$channel] ?? [])->getHandlers()
+                    $this->make($channel, $this->config['channels'][$channel] ?? [])->getHandlers()
                 );
             }
 
