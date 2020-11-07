@@ -2,6 +2,7 @@
 
 namespace Foris\Easy\Logger\Driver;
 
+use Foris\Easy\Logger\Exception\InvalidParamsException;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\HandlerInterface;
 use Monolog\Handler\RotatingFileHandler;
@@ -59,6 +60,18 @@ class Factory
     }
 
     /**
+     * Gets the channel configuration.
+     *
+     * @param       $channel
+     * @param array $default
+     * @return array
+     */
+    public function getChannelConfig($channel, $default = [])
+    {
+        return $this->config['channels'][$channel] ?? $default;
+    }
+
+    /**
      * Register default logger driver creator
      *
      * @throws InvalidConfigException
@@ -76,43 +89,38 @@ class Factory
      * @param string $channel
      * @param array  $config
      * @return Monolog
+     * @throws InvalidParamsException
      */
     public function make(string $channel, array $config = []): Monolog
     {
+        $config = array_merge($this->getChannelConfig($channel), $config);
+
         $driver = $config['driver'] ?? '';
         $creator = $this->aliases[$driver] ?? $driver;
-        return isset($this->creators[$creator]) ? $this->creators[$creator]($channel, $config) : $this->defaultLogger();
-    }
 
-    /**
-     * Get default logger driver
-     *
-     * @return Monolog
-     */
-    protected function defaultLogger()
-    {
-        return $this->make(
-            'log',
-            ['driver' => 'daily', 'path' => sys_get_temp_dir() . '/easy-framework/log.log']
-        );
+        if (!isset($this->creators[$creator])) {
+            throw new InvalidParamsException(sprintf('Invalid channel [%s], channel driver not exist!', $channel));
+        }
+
+        return $this->creators[$creator]($channel, $config);
     }
 
     /**
      * Extend logger driver creator
      *
-     * @param callable    $creator
+     * @param callable    $factory
      * @param string      $name
      * @param string|null $alias
      * @return $this
      * @throws InvalidConfigException
      */
-    public function extend(callable $creator, string $name, string $alias = null)
+    public function extend(callable $factory, string $name, string $alias = null)
     {
         if (isset($this->creators[$name]) || isset($this->aliases[$alias])) {
             throw new InvalidConfigException(sprintf('Log driver [%s] already exists!', $name));
         }
 
-        $this->creators[$name] = $creator;
+        $this->creators[$name] = $factory;
         !empty($alias) && $this->aliases[$alias] = $name;
 
         return $this;
@@ -149,7 +157,7 @@ class Factory
      */
     protected function prepareHandler(HandlerInterface $handler)
     {
-        return $handler->setFormatter($this->formatter());
+        return method_exists($handler, 'setFormatter') ? $handler->setFormatter($this->formatter()) : $handler;
     }
 
     /**
@@ -221,11 +229,15 @@ class Factory
         return function (string $channel, array $config = []) {
             $handlers = [];
 
-            foreach ($config['channels'] ?? [] as $channel) {
+            foreach ($config['channels'] ?? [] as $itemChannel) {
                 $handlers = array_merge(
                     $handlers,
-                    $this->make($channel, $this->config['channels'][$channel] ?? [])->getHandlers()
+                    $this->make($itemChannel, $this->getChannelConfig($itemChannel))->getHandlers()
                 );
+            }
+
+            if (empty($handlers)) {
+                throw new InvalidParamsException('Channels can not be empty!');
             }
 
             return new Monolog($channel, $handlers);
