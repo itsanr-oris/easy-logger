@@ -1,14 +1,9 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: f-oris
- * Date: 2019/7/9
- * Time: 4:25 PM
- */
 
 namespace Foris\Easy\Logger\Tests\Driver;
 
 use Foris\Easy\Logger\Exception\InvalidConfigException;
+use Foris\Easy\Logger\Exception\InvalidParamsException;
 use Foris\Easy\Logger\Tests\TestCase;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger as MonoLogger;
@@ -18,14 +13,14 @@ use Monolog\Handler\RotatingFileHandler;
 
 /**
  * Class FactoryTest
- * @package EasySmartProgram\Tests\Support\Log\Driver
- * @author  f-oris <us@f-oris.me>
- * @version 1.0.0
  */
 class FactoryTest extends TestCase
 {
     /**
-     * @throws \Foris\Easy\Logger\Exception\InvalidConfigException
+     * Test extend logger driver.
+     *
+     * @throws InvalidConfigException
+     * @throws InvalidParamsException
      */
     public function testExtendCustomerDriver()
     {
@@ -41,7 +36,9 @@ class FactoryTest extends TestCase
     }
 
     /**
-     * @throws \Foris\Easy\Logger\Exception\InvalidConfigException
+     * Test override an exist logger driver.
+     *
+     * @throws InvalidConfigException
      */
     public function testExtendExistsDriver()
     {
@@ -59,20 +56,25 @@ class FactoryTest extends TestCase
     }
 
     /**
+     * Test make not exist logger driver.
+     *
      * @throws InvalidConfigException
+     * @throws InvalidParamsException
      */
     public function testMakeNotExistLoggerDriver()
     {
-        $factory = new Factory();
-        $logger = $factory->make('not_exists_driver', ['driver' => 'not_exists_driver']);
+        $this->expectException(InvalidParamsException::class);
+        $this->expectExceptionMessage('Invalid channel [not_exists_driver], channel driver not exist!');
 
-        $this->assertTrue($logger instanceof LoggerInterface);
-        $this->assertSame('log', $logger->getName());
-        $this->assertTrue($logger->getHandlers()[0] instanceof RotatingFileHandler);
+        $factory = new Factory();
+        $factory->make('not_exists_driver', ['driver' => 'not_exists_driver']);
     }
 
     /**
+     * Test make a single logger driver instance.
+     *
      * @throws InvalidConfigException
+     * @throws InvalidParamsException
      */
     public function testMakeSingleLoggerDriver()
     {
@@ -88,7 +90,10 @@ class FactoryTest extends TestCase
     }
 
     /**
+     * Test make a daily logger driver instance.
+     *
      * @throws InvalidConfigException
+     * @throws InvalidParamsException
      */
     public function testMakeDailyLoggerDriver()
     {
@@ -104,14 +109,20 @@ class FactoryTest extends TestCase
     }
 
     /**
+     * Test make a stack logger driver instance.
+     *
      * @throws InvalidConfigException
+     * @throws InvalidParamsException
      */
     public function testMakeStackLoggerDriver()
     {
         $config = [
-            'driver' => 'stack',
-            'channels' => ['single', 'daily'],
-            'total_channels' => [
+            'default' => 'stack',
+            'channels' => [
+                'stack' => [
+                    'driver' => 'stack',
+                    'channels' => ['single', 'daily'],
+                ],
                 'single' => [
                     'driver' => 'single',
                     'path' => sys_get_temp_dir() . '/logs/smart-program.log',
@@ -123,8 +134,8 @@ class FactoryTest extends TestCase
             ],
         ];
 
-        $factory = new Factory();
-        $logger = $factory->make('stack', $config);
+        $factory = new Factory($config);
+        $logger = $factory->make('stack');
 
         $this->assertTrue($logger instanceof LoggerInterface);
         $this->assertSame('daily', $logger->getName());
@@ -133,7 +144,10 @@ class FactoryTest extends TestCase
     }
 
     /**
+     * Test alias a logger driver.
+     *
      * @throws InvalidConfigException
+     * @throws InvalidParamsException
      */
     public function testAliasDriver()
     {
@@ -154,6 +168,8 @@ class FactoryTest extends TestCase
     }
 
     /**
+     * Test alias logger driver with a duplicate alias.
+     *
      * @throws InvalidConfigException
      */
     public function testDuplicateAlias()
@@ -173,6 +189,8 @@ class FactoryTest extends TestCase
     }
 
     /**
+     * Test alias a not-exist logger driver.
+     *
      * @throws InvalidConfigException
      */
     public function testAliasNotExistsDriver()
@@ -183,5 +201,21 @@ class FactoryTest extends TestCase
         $this->expectExceptionMessage('Driver creator [my-single] not exists!');
 
         $factory->alias('my-single', 'my-single-2');
+    }
+
+    /**
+     * Test make stack logger driver with empty channels.
+     *
+     * @throws InvalidConfigException
+     * @throws InvalidParamsException
+     */
+    public function testMakeStackLoggerDriverWithEmptyChannels()
+    {
+        $factory = new Factory();
+
+        $this->expectException(InvalidParamsException::class);
+        $this->expectExceptionMessage('Channels can not be empty!');
+
+        $factory->make('stack', ['driver' => 'stack', 'channels' => []]);
     }
 }

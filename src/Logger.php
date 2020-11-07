@@ -2,8 +2,10 @@
 
 namespace Foris\Easy\Logger;
 
+use Foris\Easy\Logger\Driver\Factory;
+use Foris\Easy\Logger\Exception\InvalidConfigException;
+use Foris\Easy\Logger\Exception\InvalidParamsException;
 use Psr\Log\LoggerInterface;
-use Foris\Easy\Logger\Driver\Factory as DriverFactory;
 
 /**
  * Class Logger
@@ -11,51 +13,83 @@ use Foris\Easy\Logger\Driver\Factory as DriverFactory;
 class Logger implements LoggerInterface
 {
     /**
+     * Logger configuration.
+     *
      * @var array
      */
     protected $config = [];
 
     /**
+     * Logger driver instance.
+     *
      * @var LoggerInterface
      */
     protected $driver;
 
     /**
-     * @var DriverFactory
+     * Logger driver factory
+     *
+     * @var Factory
      */
     protected $driverFactory;
 
     /**
+     * Logger instance.
+     *
+     * @var Logger
+     */
+    protected static $instance;
+
+    /**
      * Logger constructor.
      *
-     * @param DriverFactory $factory
-     * @param array         $config
+     * @param Factory $factory
+     * @param array   $config
+     * @throws InvalidConfigException
      */
-    public function __construct(DriverFactory $factory, array $config = [])
+    public function __construct(Factory $factory = null, array $config = [])
     {
-        $this->setDriverFactory($factory)->initConfig($config);
+        $this->setDriverFactory($factory)->setConfig(array_merge($this->defaultConfig(), $config));
     }
 
     /**
-     * Init logger driver config
+     * Gets the default configuration.
      *
-     * @param $config
-     * @return $this
+     * @return array
      */
-    protected function initConfig($config)
+    protected function defaultConfig()
+    {
+        return [
+            'default' => 'single',
+            'channels' => [
+                'single' => [
+                    'driver' => 'single',
+                    'path' => sys_get_temp_dir() . '/logs/easy-logger.log',
+                    'level' => 'debug',
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Sets the logger configuration.
+     *
+     * @param array $config
+     * @throws InvalidConfigException
+     */
+    public function setConfig(array $config = [])
     {
         $this->config = $config;
         $this->getDriverFactory()->setConfig($config);
-        return $this;
     }
 
     /**
      * Set logger driver factory
      *
-     * @param DriverFactory $factory
+     * @param Factory $factory
      * @return $this
      */
-    public function setDriverFactory(DriverFactory $factory)
+    public function setDriverFactory(Factory $factory = null)
     {
         $this->driverFactory = $factory;
         return $this;
@@ -64,11 +98,12 @@ class Logger implements LoggerInterface
     /**
      * Get logger driver factory instance
      *
-     * @return DriverFactory
+     * @return Factory
+     * @throws Exception\InvalidConfigException
      */
-    public function getDriverFactory() : DriverFactory
+    public function getDriverFactory() : Factory
     {
-        return $this->driverFactory;
+        return empty($this->driverFactory) ? new Factory($this->config) : $this->driverFactory;
     }
 
     /**
@@ -76,11 +111,12 @@ class Logger implements LoggerInterface
      *
      * @param string $channel
      * @return $this
+     * @throws InvalidConfigException
+     * @throws InvalidParamsException
      */
     public function channel(string $channel)
     {
-        $this->config['default'] = $channel;
-        $this->driver = null;
+        $this->driver = $this->getDriverFactory()->make($channel);
         return $this;
     }
 
@@ -89,27 +125,26 @@ class Logger implements LoggerInterface
      *
      * @param array $channels
      * @return $this
+     * @throws InvalidConfigException
+     * @throws InvalidParamsException
      */
     public function stack(array $channels)
     {
-        $this->config['default'] = 'stack';
-        $this->config['channels']['stack']['channels'] = $channels;
-        $this->initConfig($this->config);
-        $this->driver = null;
+        $this->driver = $this->getDriverFactory()->make('stack', ['driver' => 'stack', 'channels' => $channels]);
         return $this;
     }
 
     /**
      * Get logger driver instance
      *
-     * @return LoggerInterface
+     * @return LoggerInterface|\Monolog\Logger
+     * @throws InvalidConfigException
+     * @throws InvalidParamsException
      */
     public function driver() : LoggerInterface
     {
         if (!$this->driver instanceof LoggerInterface) {
-            $channel = $this->config['default'] ?? null;
-            $config = $this->config['channels'][$channel] ?? [];
-            $this->driver = $this->getDriverFactory()->make($channel, $config);
+            $this->driver = $this->getDriverFactory()->make($this->config['default']);
         }
 
         return $this->driver;
@@ -120,6 +155,8 @@ class Logger implements LoggerInterface
      *
      * @param string $message
      * @param array  $context
+     * @throws InvalidConfigException
+     * @throws InvalidParamsException
      */
     public function emergency($message, array $context = array())
     {
@@ -131,6 +168,8 @@ class Logger implements LoggerInterface
      *
      * @param string $message
      * @param array  $context
+     * @throws InvalidConfigException
+     * @throws InvalidParamsException
      */
     public function alert($message, array $context = array())
     {
@@ -142,6 +181,8 @@ class Logger implements LoggerInterface
      *
      * @param string $message
      * @param array  $context
+     * @throws InvalidConfigException
+     * @throws InvalidParamsException
      */
     public function critical($message, array $context = array())
     {
@@ -153,6 +194,8 @@ class Logger implements LoggerInterface
      *
      * @param string $message
      * @param array  $context
+     * @throws InvalidConfigException
+     * @throws InvalidParamsException
      */
     public function error($message, array $context = array())
     {
@@ -164,6 +207,8 @@ class Logger implements LoggerInterface
      *
      * @param string $message
      * @param array  $context
+     * @throws InvalidConfigException
+     * @throws InvalidParamsException
      */
     public function warning($message, array $context = array())
     {
@@ -175,6 +220,8 @@ class Logger implements LoggerInterface
      *
      * @param string $message
      * @param array  $context
+     * @throws InvalidConfigException
+     * @throws InvalidParamsException
      */
     public function notice($message, array $context = array())
     {
@@ -186,6 +233,8 @@ class Logger implements LoggerInterface
      *
      * @param string $message
      * @param array  $context
+     * @throws InvalidConfigException
+     * @throws InvalidParamsException
      */
     public function info($message, array $context = array())
     {
@@ -197,6 +246,8 @@ class Logger implements LoggerInterface
      *
      * @param string $message
      * @param array  $context
+     * @throws InvalidConfigException
+     * @throws InvalidParamsException
      */
     public function debug($message, array $context = array())
     {
@@ -209,6 +260,8 @@ class Logger implements LoggerInterface
      * @param mixed  $level
      * @param string $message
      * @param array  $context
+     * @throws InvalidConfigException
+     * @throws InvalidParamsException
      */
     public function log($level, $message, array $context = array())
     {
