@@ -229,10 +229,10 @@ class Factory
         return function (string $channel, array $config = []) {
             $handlers = [];
 
-            foreach ($config['channels'] ?? [] as $channel) {
+            foreach ($config['channels'] ?? [] as $itemChannel) {
                 $handlers = array_merge(
                     $handlers,
-                    $this->make($channel, $this->getChannelConfig($channel))->getHandlers()
+                    $this->make($itemChannel, $this->getChannelConfig($itemChannel))->getHandlers()
                 );
             }
 

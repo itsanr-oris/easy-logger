@@ -4,7 +4,7 @@ return [
     /**
      * default log channel
      */
-    'default' => 'stack',
+    'default' => 'single',
 
     /**
      * available log channels
@@ -24,7 +24,7 @@ return [
         'daily' => [
             'driver' => 'daily',
             'path' => sys_get_temp_dir() . '/logs/easy-logger.log',
-            'level' => 'info',
+            'level' => 'debug',
         ],
     ],
 ];

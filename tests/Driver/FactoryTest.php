@@ -138,7 +138,7 @@ class FactoryTest extends TestCase
         $logger = $factory->make('stack');
 
         $this->assertTrue($logger instanceof LoggerInterface);
-        $this->assertSame('daily', $logger->getName());
+        $this->assertSame('stack', $logger->getName());
         $this->assertTrue($logger->getHandlers()[0] instanceof StreamHandler);
         $this->assertTrue($logger->getHandlers()[1] instanceof RotatingFileHandler);
     }

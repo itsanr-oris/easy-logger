@@ -269,7 +269,7 @@ class LoggerTest extends TestCase
     {
         $logger = $this->logger();
         $logger->stack(['single', 'test']);
-        $this->assertEquals('test', $logger->driver()->getName());
+        $this->assertEquals('stack', $logger->driver()->getName());
         $this->assertTrue($logger->driver()->getHandlers()[0] instanceof StreamHandler);
         $this->assertTrue($logger->driver()->getHandlers()[1] instanceof TestHandler);
     }
