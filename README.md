@@ -2,7 +2,12 @@
  
 参考laravel log组件，基于monolog/monolog简单封装的日志扩展包，基本使用方式参考laravel日志使用方式。
  
-[![Latest Stable Version](https://poser.pugx.org/f-oris/easy-logger/v)](//packagist.org/packages/f-oris/easy-logger) [![Total Downloads](https://poser.pugx.org/f-oris/easy-logger/downloads)](//packagist.org/packages/f-oris/easy-logger) [![Latest Unstable Version](https://poser.pugx.org/f-oris/easy-logger/v/unstable)](//packagist.org/packages/f-oris/easy-logger) [![License](https://poser.pugx.org/f-oris/easy-logger/license)](//packagist.org/packages/f-oris/easy-logger)
+[![Build Status](https://travis-ci.com/itsanr-oris/easy-logger.svg?branch=master)](https://travis-ci.com/itsanr-oris/easy-logger)
+[![codecov](https://codecov.io/gh/itsanr-oris/easy-logger/branch/master/graph/badge.svg?token=E94oWQqjh0)](https://codecov.io/gh/itsanr-oris/easy-logger)
+[![Latest Stable Version](https://poser.pugx.org/f-oris/easy-logger/v)](//packagist.org/packages/f-oris/easy-logger)
+[![Latest Unstable Version](https://poser.pugx.org/f-oris/easy-logger/v/unstable)](//packagist.org/packages/f-oris/easy-logger)
+[![Total Downloads](https://poser.pugx.org/f-oris/easy-logger/downloads)](//packagist.org/packages/f-oris/easy-logger)
+[![License](https://poser.pugx.org/f-oris/easy-logger/license)](//packagist.org/packages/f-oris/easy-logger)
 
 ## 功能
 
