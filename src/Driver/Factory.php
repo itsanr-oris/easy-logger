@@ -68,7 +68,7 @@ class Factory
      */
     public function getChannelConfig($channel, $default = [])
     {
-        return $this->config['channels'][$channel] ?? $default;
+        return isset($this->config['channels'][$channel]) ? $this->config['channels'][$channel] : $default;
     }
 
     /**
@@ -91,12 +91,12 @@ class Factory
      * @return Monolog
      * @throws InvalidParamsException
      */
-    public function make(string $channel, array $config = []): Monolog
+    public function make($channel, array $config = [])
     {
         $config = array_merge($this->getChannelConfig($channel), $config);
 
-        $driver = $config['driver'] ?? '';
-        $creator = $this->aliases[$driver] ?? $driver;
+        $driver = isset($config['driver']) ? $config['driver'] : '';
+        $creator = isset($this->aliases[$driver]) ? $this->aliases[$driver] : $driver;
 
         if (!isset($this->creators[$creator])) {
             throw new InvalidParamsException(sprintf('Invalid channel [%s], channel driver not exist!', $channel));
@@ -114,7 +114,7 @@ class Factory
      * @return $this
      * @throws InvalidConfigException
      */
-    public function extend(callable $factory, string $name, string $alias = null)
+    public function extend(callable $factory, $name, $alias = null)
     {
         if (isset($this->creators[$name]) || isset($this->aliases[$alias])) {
             throw new InvalidConfigException(sprintf('Log driver [%s] already exists!', $name));
@@ -134,7 +134,7 @@ class Factory
      * @return $this
      * @throws InvalidConfigException
      */
-    public function alias(string $name, string $alias)
+    public function alias($name, $alias)
     {
         if (!isset($this->creators[$name])) {
             throw new InvalidConfigException(sprintf('Driver creator [%s] not exists!', $name));
@@ -184,7 +184,7 @@ class Factory
      */
     protected function level(array $config)
     {
-        return $config['level'] ?? 'debug';
+        return isset($config['level']) ? $config['level'] : 'debug';
     }
 
     /**
@@ -194,7 +194,7 @@ class Factory
      */
     protected function singleFileLogDriverCreator()
     {
-        return function (string $channel, array $config = []) {
+        return function ($channel, array $config = []) {
             return new Monolog($channel, [
                 $this->prepareHandler(
                     new StreamHandler($config['path'], $this->level($config))
@@ -210,11 +210,10 @@ class Factory
      */
     protected function dailyFileLogDriverCreator()
     {
-        return function (string $channel, array $config = []) {
+        return function ($channel, array $config = []) {
+            $days = isset($config['days']) ? $config['days'] : 7;
             return new Monolog($channel, [
-                $this->prepareHandler(new RotatingFileHandler(
-                    $config['path'], $config['days'] ?? 7, $this->level($config)
-                )),
+                $this->prepareHandler(new RotatingFileHandler($config['path'], $days, $this->level($config))),
             ]);
         };
     }
@@ -226,10 +225,11 @@ class Factory
      */
     protected function stackLogDriverCreator()
     {
-        return function (string $channel, array $config = []) {
+        return function ($channel, array $config = []) {
             $handlers = [];
 
-            foreach ($config['channels'] ?? [] as $itemChannel) {
+            $channels = isset($config['channels']) ? $config['channels'] : [];
+            foreach ($channels as $itemChannel) {
                 $handlers = array_merge(
                     $handlers,
                     $this->make($itemChannel, $this->getChannelConfig($itemChannel))->getHandlers()
