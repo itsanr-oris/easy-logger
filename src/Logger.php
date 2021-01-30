@@ -101,7 +101,7 @@ class Logger implements LoggerInterface
      * @return Factory
      * @throws Exception\InvalidConfigException
      */
-    public function getDriverFactory() : Factory
+    public function getDriverFactory()
     {
         return empty($this->driverFactory) ? new Factory($this->config) : $this->driverFactory;
     }
@@ -114,7 +114,7 @@ class Logger implements LoggerInterface
      * @throws InvalidConfigException
      * @throws InvalidParamsException
      */
-    public function channel(string $channel)
+    public function channel($channel)
     {
         $this->driver = $this->getDriverFactory()->make($channel);
         return $this;
@@ -141,7 +141,7 @@ class Logger implements LoggerInterface
      * @throws InvalidConfigException
      * @throws InvalidParamsException
      */
-    public function driver() : LoggerInterface
+    public function driver()
     {
         if (!$this->driver instanceof LoggerInterface) {
             $this->driver = $this->getDriverFactory()->make($this->config['default']);

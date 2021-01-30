@@ -49,9 +49,7 @@ class FactoryTest extends TestCase
             return $logger;
         };
 
-        $this->expectException(InvalidConfigException::class);
-        $this->expectExceptionMessage('Log driver [single] already exists!');
-
+        $this->assertThrowException(InvalidConfigException::class, 'Log driver [single] already exists!');
         $factory->extend($callable, 'single');
     }
 
@@ -63,8 +61,9 @@ class FactoryTest extends TestCase
      */
     public function testMakeNotExistLoggerDriver()
     {
-        $this->expectException(InvalidParamsException::class);
-        $this->expectExceptionMessage('Invalid channel [not_exists_driver], channel driver not exist!');
+        $exception = InvalidParamsException::class;
+        $message = 'Invalid channel [not_exists_driver], channel driver not exist!';
+        $this->assertThrowException($exception, $message);
 
         $factory = new Factory();
         $factory->make('not_exists_driver', ['driver' => 'not_exists_driver']);
@@ -176,15 +175,11 @@ class FactoryTest extends TestCase
     {
         $factory = new Factory();
 
-        $this->expectException(InvalidConfigException::class);
-        $this->expectExceptionMessage('Driver creator [my-single] already exists!');
-
+        $this->assertThrowException(InvalidConfigException::class, 'Driver creator [my-single] already exists!');
         $factory->alias('single', 'my-single');
         $factory->alias('single', 'my-single');
 
-        $this->expectException(InvalidConfigException::class);
-        $this->expectExceptionMessage('Driver creator [single] already exists!');
-
+        $this->assertThrowException(InvalidConfigException::class, 'Driver creator [single] already exists!');
         $factory->alias('daily', 'single');
     }
 
@@ -196,10 +191,7 @@ class FactoryTest extends TestCase
     public function testAliasNotExistsDriver()
     {
         $factory = new Factory();
-
-        $this->expectException(InvalidConfigException::class);
-        $this->expectExceptionMessage('Driver creator [my-single] not exists!');
-
+        $this->assertThrowException(InvalidConfigException::class, 'Driver creator [my-single] not exists!');
         $factory->alias('my-single', 'my-single-2');
     }
 
@@ -212,10 +204,7 @@ class FactoryTest extends TestCase
     public function testMakeStackLoggerDriverWithEmptyChannels()
     {
         $factory = new Factory();
-
-        $this->expectException(InvalidParamsException::class);
-        $this->expectExceptionMessage('Channels can not be empty!');
-
+        $this->assertThrowException(InvalidParamsException::class, 'Channels can not be empty!');
         $factory->make('stack', ['driver' => 'stack', 'channels' => []]);
     }
 }
