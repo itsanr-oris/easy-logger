@@ -1,6 +1,6 @@
 ## 简介
  
-参考laravel log组件，基于monolog/monolog简单封装的日志扩展包，基本使用方式参考laravel日志使用方式。
+基于monolog/monolog简单封装的日志扩展包。
  
 [![Build Status](https://travis-ci.com/itsanr-oris/easy-logger.svg?branch=master)](https://travis-ci.com/itsanr-oris/easy-logger)
 [![codecov](https://codecov.io/gh/itsanr-oris/easy-logger/branch/master/graph/badge.svg?token=E94oWQqjh0)](https://codecov.io/gh/itsanr-oris/easy-logger)
@@ -20,25 +20,43 @@
 通过composer引入扩展包
 
 ```bash
-composer require f-oris/easy-logger
+composer require f-oris/easy-logger:^1.1
 ```
 
 ## 配置
 
 参考`config.example.php`文件
 
-## 用法
+## 基本用法
+
+#### 1. 写入日志
 
 ```php
 <?php
 
-$logger = new \Foris\Easy\Logger\Logger();
-$logger->debug('This is a debug message');
-// 在sys_get_temp_dir() . '/logs/easy-logger.log'文件中可以找到相关日志内容
+use Foris\Easy\Logger\Logger;
 
+$config = [
+    // ...
+];
+$logger = new Logger($config);
+
+/**
+ * 写入日志信息
+ * 
+ * 可以使用不同的方法写入不同级别的日志信息
+ * 下面两种写法等价
+ */
+$logger->debug('调试日志', ['context' => 'context']);
+$logger->log('debug', '调试日志', ['context' => 'context']);
+
+/**
+ * 日志信息信息写入指定通道 
+ */
+$logger->channel('channel')->debug('日志信息写入channel通道', ['context' => 'context']);
 ```
 
-## 扩展自定义Logger driver
+#### 2. 扩展自定义Logger channel
 
 ```php
 <?php

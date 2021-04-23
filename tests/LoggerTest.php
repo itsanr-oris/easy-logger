@@ -1,19 +1,12 @@
 <?php /** @noinspection PhpUnnecessaryFullyQualifiedNameInspection */
 
-/**
- * Created by PhpStorm.
- * User: f-oris
- * Date: 2019/7/9
- * Time: 4:25 PM
- */
-
 namespace Foris\Easy\Logger\Tests;
-
 
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\TestHandler;
 use Foris\Easy\Logger\Logger;
 use Foris\Easy\Logger\Driver\Factory;
+use Psr\Log\LoggerInterface;
 
 /**
  * Class LoggerTest
@@ -73,14 +66,13 @@ class LoggerTest extends TestCase
     }
 
     /**
-     * Gets the logger instance.
+     * Test logger configuration.
      *
-     * @return Logger
-     * @throws \Foris\Easy\Logger\Exception\InvalidConfigException
+     * @return array
      */
-    protected function logger()
+    protected function config()
     {
-        $config = [
+        return [
             'default' => 'test',
             'channels' => [
                 'stack' => [
@@ -97,8 +89,63 @@ class LoggerTest extends TestCase
                 ],
             ]
         ];
+    }
 
-        return new Logger($this->factory(), $config);
+    /**
+     * Gets the logger instance.
+     *
+     * @return Logger
+     * @throws \Foris\Easy\Logger\Exception\InvalidConfigException
+     */
+    protected function logger()
+    {
+        return new Logger($this->factory(), $this->config());
+    }
+
+    /**
+     * Test gets the logger instance.
+     *
+     * @throws \Foris\Easy\Logger\Exception\InvalidConfigException
+     */
+    public function testGetCacheInstanceWithDriverFactory()
+    {
+        $factory = \Mockery::mock(Factory::class);
+        $factory->makePartial();
+
+        $cache = new Logger($factory);
+        $this->assertSame($factory, $cache->getDriverFactory());
+    }
+
+    /**
+     * Test gets the logger instance.
+     *
+     * @throws \Foris\Easy\Logger\Exception\InvalidConfigException
+     */
+    public function testGetCacheInstanceWithConfiguration()
+    {
+        $defaultConfig = [
+            'default' => 'single',
+            'channels' => [
+                'single' => [
+                    'driver' => 'single',
+                    'path' => sys_get_temp_dir() . '/logs/easy-logger.log',
+                    'level' => 'debug',
+                ],
+            ],
+        ];
+
+        $cache = new Logger($this->config());
+        $this->assertEquals(array_merge($defaultConfig, $this->config()), $cache->getConfig());
+    }
+
+    /**
+     * Test get logger configuration.
+     *
+     * @throws \Foris\Easy\Logger\Exception\InvalidConfigException
+     */
+    public function testGetConfig()
+    {
+        $this->assertEquals($this->config(), $this->logger()->getConfig());
     }
 
     /**
@@ -272,5 +319,23 @@ class LoggerTest extends TestCase
         $this->assertEquals('stack', $logger->driver()->getName());
         $this->assertTrue($logger->driver()->getHandlers()[0] instanceof StreamHandler);
         $this->assertTrue($logger->driver()->getHandlers()[1] instanceof TestHandler);
+    }
+
+    /**
+     * Test extend logger channel.
+     *
+     * @throws \Foris\Easy\Logger\Exception\InvalidConfigException
+     * @throws \Foris\Easy\Logger\Exception\InvalidParamsException
+     */
+    public function testExtendLoggerChannel()
+    {
+        $logger = new Logger();
+        $channel = \Mockery::mock(LoggerInterface::class);
+
+        $logger->extend('mock_channel', function () use ($channel) {
+            return $channel;
+        });
+
+        $this->assertSame($channel, $logger->channel('mock_channel')->driver());
     }
 }

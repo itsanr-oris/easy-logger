@@ -47,9 +47,17 @@ class Logger implements LoggerInterface
      * @param array   $config
      * @throws InvalidConfigException
      */
-    public function __construct(Factory $factory = null, array $config = [])
+    public function __construct($factory = null, $config = [])
     {
-        $this->setDriverFactory($factory)->setConfig(array_merge($this->defaultConfig(), $config));
+        if ($factory instanceof Factory) {
+            $this->setDriverFactory($factory);
+        }
+
+        if (is_array($factory)) {
+            $config = array_merge($factory, $config);
+        }
+
+        $this->setConfig(array_merge($this->defaultConfig(), $config));
     }
 
     /**
@@ -84,6 +92,16 @@ class Logger implements LoggerInterface
     }
 
     /**
+     * Gets the logger configuration.
+     *
+     * @return array
+     */
+    public function getConfig()
+    {
+        return $this->config;
+    }
+
+    /**
      * Set logger driver factory
      *
      * @param Factory $factory
@@ -103,7 +121,11 @@ class Logger implements LoggerInterface
      */
     public function getDriverFactory()
     {
-        return empty($this->driverFactory) ? new Factory($this->config) : $this->driverFactory;
+        if (!$this->driverFactory instanceof Factory) {
+            $this->driverFactory = new Factory($this->config);
+        }
+
+        return $this->driverFactory;
     }
 
     /**
@@ -148,6 +170,20 @@ class Logger implements LoggerInterface
         }
 
         return $this->driver;
+    }
+
+    /**
+     *  Extend logger driver.
+     *
+     * @param          $name
+     * @param callable $factory
+     * @return $this
+     * @throws InvalidConfigException
+     */
+    public function extend($name, callable $factory)
+    {
+        $this->getDriverFactory()->extend($factory, $name);
+        return $this;
     }
 
     /**

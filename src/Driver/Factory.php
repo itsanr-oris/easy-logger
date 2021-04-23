@@ -23,14 +23,14 @@ class Factory
     protected $config = [];
 
     /**
-     * Logger driver aliases
+     * Logger channel aliases
      *
      * @var array
      */
     protected $aliases = [];
 
     /**
-     * Logger driver creators,
+     * Logger channel creators,
      *
      * @var array
      */
@@ -48,7 +48,7 @@ class Factory
     }
 
     /**
-     * Set logger driver config.
+     * Sets the logger configuration.
      *
      * @param $config
      * @return $this
@@ -60,11 +60,25 @@ class Factory
     }
 
     /**
+     * Gets the logger configuration.
+     *
+     * @param $channel
+     * @return array
+     */
+    public function getConfig($channel = null)
+    {
+        return $channel === null
+            ? ($this->config)
+            : (isset($this->config['channels'][$channel]) ? $this->config['channels'][$channel] : []);
+    }
+
+    /**
      * Gets the channel configuration.
      *
      * @param       $channel
      * @param array $default
      * @return array
+     * @deprecated
      */
     public function getChannelConfig($channel, $default = [])
     {
@@ -72,19 +86,19 @@ class Factory
     }
 
     /**
-     * Register default logger driver creator
+     * Register default logger channel creator
      *
      * @throws InvalidConfigException
      */
     protected function registerDefaultCreator()
     {
-        $this->extend($this->singleFileLogDriverCreator(), 'single');
-        $this->extend($this->dailyFileLogDriverCreator(), 'daily');
-        $this->extend($this->stackLogDriverCreator(), 'stack');
+        $this->extend($this->singleFileLogChannelCreator(), 'single');
+        $this->extend($this->dailyFileLogChannelCreator(), 'daily');
+        $this->extend($this->stackLogChannelCreator(), 'stack');
     }
 
     /**
-     * Make and get logger driver instance
+     * Make and get logger channel instance
      *
      * @param string $channel
      * @param array  $config
@@ -95,18 +109,45 @@ class Factory
     {
         $config = array_merge($this->getChannelConfig($channel), $config);
 
-        $driver = isset($config['driver']) ? $config['driver'] : '';
-        $creator = isset($this->aliases[$driver]) ? $this->aliases[$driver] : $driver;
-
-        if (!isset($this->creators[$creator])) {
-            throw new InvalidParamsException(sprintf('Invalid channel [%s], channel driver not exist!', $channel));
+        if (!$this->channelExists($channel)) {
+            throw new InvalidParamsException(sprintf('Logger channel [%s] not exist!', $channel));
         }
 
-        return $this->creators[$creator]($channel, $config);
+        return call_user_func_array($this->getCreator($channel), [$channel, $config]);
     }
 
     /**
-     * Extend logger driver creator
+     * Determine if the logger channel exists.
+     *
+     * @param $channel
+     * @return bool
+     */
+    protected function channelExists($channel)
+    {
+        return is_callable($this->getCreator($channel));
+    }
+
+    /**
+     * Gets the logger channel creator.
+     *
+     * @param $channel
+     * @return mixed|null
+     */
+    protected function getCreator($channel)
+    {
+        if (isset($this->aliases[$channel])) {
+            $channel = $this->aliases[$channel];
+        }
+
+        if (!isset($this->creators[$channel]) || !is_callable($this->creators[$channel])) {
+            return null;
+        }
+
+        return $this->creators[$channel];
+    }
+
+    /**
+     * Extend logger channel creator
      *
      * @param callable    $factory
      * @param string      $name
@@ -116,8 +157,8 @@ class Factory
      */
     public function extend(callable $factory, $name, $alias = null)
     {
-        if (isset($this->creators[$name]) || isset($this->aliases[$alias])) {
-            throw new InvalidConfigException(sprintf('Log driver [%s] already exists!', $name));
+        if ($this->channelExists($name) || $this->channelExists($alias)) {
+            throw new InvalidConfigException(sprintf('Logger channel [%s] already exists!', $name));
         }
 
         $this->creators[$name] = $factory;
@@ -127,21 +168,22 @@ class Factory
     }
 
     /**
-     * Alias logger driver creator
+     * Alias logger channel creator
      *
      * @param string $name
      * @param string $alias
      * @return $this
      * @throws InvalidConfigException
+     * @deprecated
      */
     public function alias($name, $alias)
     {
-        if (!isset($this->creators[$name])) {
-            throw new InvalidConfigException(sprintf('Driver creator [%s] not exists!', $name));
+        if (!$this->channelExists($name)) {
+            throw new InvalidConfigException(sprintf('Logger channel [%s] not exists!', $name));
         }
 
-        if (isset($this->aliases[$alias]) || isset($this->creators[$alias])) {
-            throw new InvalidConfigException(sprintf('Driver creator [%s] already exists!', $alias));
+        if ($this->channelExists($alias)) {
+            throw new InvalidConfigException(sprintf('Logger channel [%s] already exists!', $alias));
         }
 
         $this->aliases[$alias] = $name;
@@ -188,51 +230,54 @@ class Factory
     }
 
     /**
-     * Get single-file logger driver instance
+     * Get single-file logger channel instance
      *
      * @return \Closure
      */
-    protected function singleFileLogDriverCreator()
+    protected function singleFileLogChannelCreator()
     {
         return function ($channel, array $config = []) {
+            $config = array_merge($this->getConfig('single'), $config);
+
             return new Monolog($channel, [
-                $this->prepareHandler(
-                    new StreamHandler($config['path'], $this->level($config))
-                ),
+                $this->prepareHandler(new StreamHandler($config['path'], $this->level($config)))
             ]);
         };
     }
 
     /**
-     * Get daily-file logger driver instance
+     * Get daily-file logger channel instance
      *
      * @return \Closure
      */
-    protected function dailyFileLogDriverCreator()
+    protected function dailyFileLogChannelCreator()
     {
         return function ($channel, array $config = []) {
+            $config = array_merge($this->getConfig('daily'), $config);
             $days = isset($config['days']) ? $config['days'] : 7;
+
             return new Monolog($channel, [
-                $this->prepareHandler(new RotatingFileHandler($config['path'], $days, $this->level($config))),
+                $this->prepareHandler(new RotatingFileHandler($config['path'], $days, $this->level($config)))
             ]);
         };
     }
 
     /**
-     * Get stack logger driver instance
+     * Get stack logger channel instance
      *
      * @return \Closure
      */
-    protected function stackLogDriverCreator()
+    protected function stackLogChannelCreator()
     {
         return function ($channel, array $config = []) {
             $handlers = [];
+            $config = array_merge($this->getConfig('stack'), $config);
 
             $channels = isset($config['channels']) ? $config['channels'] : [];
             foreach ($channels as $itemChannel) {
                 $handlers = array_merge(
                     $handlers,
-                    $this->make($itemChannel, $this->getChannelConfig($itemChannel))->getHandlers()
+                    $this->make($itemChannel, $this->getConfig($itemChannel))->getHandlers()
                 );
             }
 
