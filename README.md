@@ -1,6 +1,6 @@
 ## 简介
  
-参考laravel log组件，基于monolog/monolog简单封装的日志扩展包，基本使用方式参考laravel日志使用方式。
+基于monolog/monolog简单封装的日志扩展包。
  
 [![Build Status](https://travis-ci.com/itsanr-oris/easy-logger.svg?branch=master)](https://travis-ci.com/itsanr-oris/easy-logger)
 [![codecov](https://codecov.io/gh/itsanr-oris/easy-logger/branch/master/graph/badge.svg?token=E94oWQqjh0)](https://codecov.io/gh/itsanr-oris/easy-logger)
@@ -8,18 +8,6 @@
 [![Latest Unstable Version](https://poser.pugx.org/f-oris/easy-logger/v/unstable)](//packagist.org/packages/f-oris/easy-logger)
 [![Total Downloads](https://poser.pugx.org/f-oris/easy-logger/downloads)](//packagist.org/packages/f-oris/easy-logger)
 [![License](https://poser.pugx.org/f-oris/easy-logger/license)](//packagist.org/packages/f-oris/easy-logger)
-
-## 版本说明
-
-|  版本 | php | 备注  |
-|  ---  | ---- | ---- |
-| < 1.0 | >= 5.5 | 非正式版本，后续移除 |
-| < 1.1 | >= 7.1 | 正式版本 |
-| >= 1.1 | >= 5.5 | 正式版本 |
-
-当前最新版本为 `1.1` , 主要变如下：
-
-- [x] 移除`php 7.1`版本限制，更改为`php 5.5`
 
 ## 功能
 
