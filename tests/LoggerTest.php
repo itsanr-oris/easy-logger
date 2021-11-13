@@ -2,6 +2,7 @@
 
 namespace Foris\Easy\Logger\Tests;
 
+use Mockery;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\TestHandler;
 use Foris\Easy\Logger\Logger;
@@ -87,6 +88,11 @@ class LoggerTest extends TestCase
                     'path' => sys_get_temp_dir() . '/logs/easy-logger.log',
                     'level' => 'debug',
                 ],
+                'business_module_channel' => [
+                    'driver' => 'single',
+                    'path' => sys_get_temp_dir() . '/logs/easy-logger.log',
+                    'level' => 'debug',
+                ]
             ]
         ];
     }
@@ -109,7 +115,7 @@ class LoggerTest extends TestCase
      */
     public function testGetCacheInstanceWithDriverFactory()
     {
-        $factory = \Mockery::mock(Factory::class);
+        $factory = Mockery::mock(Factory::class);
         $factory->makePartial();
 
         $cache = new Logger($factory);
@@ -302,8 +308,9 @@ class LoggerTest extends TestCase
     public function testChangeChannel()
     {
         $logger = $this->logger();
-        $logger->channel('single');
-        $this->assertEquals('single', $logger->driver()->getName());
+        $logger->channel('business_module_channel');
+        $this->assertEquals('business_module_channel', $logger->driver()->getName());
+        $this->assertInstanceOf(StreamHandler::class, $logger->driver()->getHandlers()[0]);
     }
 
     /**
@@ -322,16 +329,22 @@ class LoggerTest extends TestCase
     }
 
     /**
-     * Test extend logger channel.
+     * Test extend logger driver.
      *
      * @throws \Foris\Easy\Logger\Exception\InvalidConfigException
      * @throws \Foris\Easy\Logger\Exception\InvalidParamsException
      */
     public function testExtendLoggerChannel()
     {
-        $logger = new Logger();
-        $channel = \Mockery::mock(LoggerInterface::class);
+        $config = $this->config();
+        $config['channels']['mock_channel'] = [
+            'driver' => 'mock_channel'
+        ];
 
+        $logger = new Logger($config);
+        $channel = Mockery::mock(LoggerInterface::class);
+
+        // extend driver, not channel
         $logger->extend('mock_channel', function () use ($channel) {
             return $channel;
         });
