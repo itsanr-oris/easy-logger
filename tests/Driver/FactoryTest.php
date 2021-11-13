@@ -49,7 +49,7 @@ class FactoryTest extends TestCase
             return $logger;
         };
 
-        $this->assertThrowException(InvalidConfigException::class, 'Logger channel [single] already exists!');
+        $this->assertThrowException(InvalidConfigException::class, 'Logger driver [single] already exists!');
         $factory->extend($callable, 'single');
     }
 
@@ -62,7 +62,7 @@ class FactoryTest extends TestCase
     public function testMakeNotExistLoggerChanel()
     {
         $exception = InvalidParamsException::class;
-        $message = 'Logger channel [not_exists_driver] not exist!';
+        $message = 'Logger channel [not_exists_driver] configuration error, driver [] not exist!';
         $this->assertThrowException($exception, $message);
 
         $factory = new Factory();
@@ -175,11 +175,11 @@ class FactoryTest extends TestCase
     {
         $factory = new Factory();
 
-        $this->assertThrowException(InvalidConfigException::class, 'Logger channel [my-single] already exists!');
+        $this->assertThrowException(InvalidConfigException::class, 'Logger driver [my-single] already exists!');
         $factory->alias('single', 'my-single');
         $factory->alias('single', 'my-single');
 
-        $this->assertThrowException(InvalidConfigException::class, 'Logger channel [single] already exists!');
+        $this->assertThrowException(InvalidConfigException::class, 'Logger driver [single] already exists!');
         $factory->alias('daily', 'single');
     }
 
@@ -191,7 +191,7 @@ class FactoryTest extends TestCase
     public function testAliasNotExistsChanel()
     {
         $factory = new Factory();
-        $this->assertThrowException(InvalidConfigException::class, 'Logger channel [my-single] not exists!');
+        $this->assertThrowException(InvalidConfigException::class, 'Logger driver [my-single] not exists!');
         $factory->alias('my-single', 'my-single-2');
     }
 

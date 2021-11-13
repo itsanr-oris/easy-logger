@@ -65,11 +65,11 @@ class Factory
      * @param $channel
      * @return array
      */
-    public function getConfig($channel = null)
+    public function getConfig($channel = null, $default = [])
     {
         return $channel === null
             ? ($this->config)
-            : (isset($this->config['channels'][$channel]) ? $this->config['channels'][$channel] : []);
+            : (isset($this->config['channels'][$channel]) ? $this->config['channels'][$channel] : $default);
     }
 
     /**
@@ -82,7 +82,7 @@ class Factory
      */
     public function getChannelConfig($channel, $default = [])
     {
-        return isset($this->config['channels'][$channel]) ? $this->config['channels'][$channel] : $default;
+        return $this->getConfig($channel, $default);
     }
 
     /**
@@ -107,13 +107,15 @@ class Factory
      */
     public function make($channel, array $config = [])
     {
-        $config = array_merge($this->getChannelConfig($channel), $config);
+        $config = array_merge($this->getConfig($channel), $config);
 
-        if (!$this->channelExists($channel)) {
-            throw new InvalidParamsException(sprintf('Logger channel [%s] not exist!', $channel));
+        if (!$this->driverExists($config['driver'])) {
+            throw new InvalidParamsException(
+                sprintf('Logger channel [%s] configuration error, driver [%s] not exist!', $channel, $config['driver'])
+            );
         }
 
-        return call_user_func_array($this->getCreator($channel), [$channel, $config]);
+        return call_user_func_array($this->getCreator($config['driver']), [$channel, $config]);
     }
 
     /**
@@ -121,10 +123,22 @@ class Factory
      *
      * @param $channel
      * @return bool
+     * @deprecated
      */
     protected function channelExists($channel)
     {
         return is_callable($this->getCreator($channel));
+    }
+
+    /**
+     * Determine if the logger driver exists.
+     *
+     * @param $driver
+     * @return bool
+     */
+    protected function driverExists($driver)
+    {
+        return is_callable($this->getCreator($driver));
     }
 
     /**
@@ -157,8 +171,8 @@ class Factory
      */
     public function extend(callable $factory, $name, $alias = null)
     {
-        if ($this->channelExists($name) || $this->channelExists($alias)) {
-            throw new InvalidConfigException(sprintf('Logger channel [%s] already exists!', $name));
+        if ($this->driverExists($name) || $this->driverExists($alias)) {
+            throw new InvalidConfigException(sprintf('Logger driver [%s] already exists!', $name));
         }
 
         $this->creators[$name] = $factory;
@@ -178,12 +192,12 @@ class Factory
      */
     public function alias($name, $alias)
     {
-        if (!$this->channelExists($name)) {
-            throw new InvalidConfigException(sprintf('Logger channel [%s] not exists!', $name));
+        if (!$this->driverExists($name)) {
+            throw new InvalidConfigException(sprintf('Logger driver [%s] not exists!', $name));
         }
 
-        if ($this->channelExists($alias)) {
-            throw new InvalidConfigException(sprintf('Logger channel [%s] already exists!', $alias));
+        if ($this->driverExists($alias)) {
+            throw new InvalidConfigException(sprintf('Logger driver [%s] already exists!', $alias));
         }
 
         $this->aliases[$alias] = $name;
