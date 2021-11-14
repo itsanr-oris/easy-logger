@@ -56,10 +56,12 @@ $logger->log('debug', '调试日志', ['context' => 'context']);
 $logger->channel('channel')->debug('日志信息写入channel通道', ['context' => 'context']);
 ```
 
-#### 2. 扩展自定义Logger channel
+#### 2. 扩展自定义Logger driver
 
 ```php
 <?php
+
+// 扩展的driver需要实现Psr\Log\LoggerInterface接口规范
 
 $callback = function ($channel) {
     $logger = new \Monolog\Logger($channel);
@@ -67,7 +69,7 @@ $callback = function ($channel) {
 };
 
 $factory = new \Foris\Easy\Logger\Driver\Factory();
-$factory->extend($callback, 'test');
+$factory->extend($callback, 'test_driver');
 
 $config = [
     // ...
@@ -76,7 +78,7 @@ $config = [
         // ...
         
         "test" => [
-            "driver" => "test",    
+            "driver" => "test_driver",    
         ]    
     ]
 ];

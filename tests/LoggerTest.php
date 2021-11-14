@@ -334,21 +334,21 @@ class LoggerTest extends TestCase
      * @throws \Foris\Easy\Logger\Exception\InvalidConfigException
      * @throws \Foris\Easy\Logger\Exception\InvalidParamsException
      */
-    public function testExtendLoggerChannel()
+    public function testExtendLoggerDriver()
     {
         $config = $this->config();
         $config['channels']['mock_channel'] = [
-            'driver' => 'mock_channel'
+            'driver' => 'mock_driver'
         ];
 
         $logger = new Logger($config);
-        $channel = Mockery::mock(LoggerInterface::class);
+        $driver = Mockery::mock(LoggerInterface::class);
 
         // extend driver, not channel
-        $logger->extend('mock_channel', function () use ($channel) {
-            return $channel;
+        $logger->extend('mock_driver', function () use ($driver) {
+            return $driver;
         });
 
-        $this->assertSame($channel, $logger->channel('mock_channel')->driver());
+        $this->assertSame($driver, $logger->channel('mock_channel')->driver());
     }
 }
