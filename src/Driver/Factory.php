@@ -109,9 +109,10 @@ class Factory
     {
         $config = array_merge($this->getConfig($channel), $config);
 
-        if (!$this->driverExists($config['driver'])) {
+        if (!isset($config['driver']) || !$this->driverExists($config['driver'])) {
+            $driver = isset($config['driver']) ? $config['driver'] : '';
             throw new InvalidParamsException(
-                sprintf('Logger channel [%s] configuration error, driver [%s] not exist!', $channel, $config['driver'])
+                sprintf('Logger channel [%s] configuration error, driver [%s] not exist!', $channel, $driver)
             );
         }
 
